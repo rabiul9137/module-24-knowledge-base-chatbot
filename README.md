@@ -478,3 +478,42 @@ https://github.com/rabiul9137/module-24-knowledge-base-chatbot
 This project is an educational RAG application built around the selected Bengali book **“বিশ্বের উপাদান”**.
 
 The chatbot is designed to answer questions using the selected knowledge source and should not be treated as a general-purpose factual search engine.
+## ⭐ Bonus — Chunking Strategy Comparison
+
+Two different chunking strategies were evaluated to measure their effect on retrieval performance.
+
+### Approaches Tested
+
+| Strategy   | Chunk Size | Chunk Overlap | Total Chunks |
+| ---------- | ---------: | ------------: | -----------: |
+| Strategy A |        700 |           150 |          135 |
+| Strategy B |       1000 |           200 |          103 |
+
+Both strategies used the same multilingual embedding model:
+
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+
+The same 9 answerable test questions and the same top-10 retrieval setting were used for both strategies.
+
+### Evaluation Method
+
+For each test question, the FAISS vector store retrieved the top 10 chunks.
+
+A retrieval was counted as a **hit** when the expected chapter appeared in at least one of the top 10 retrieved chunks.
+
+**Hit Rate = Correct Retrievals / Total Answerable Questions × 100**
+
+### Results
+
+| Strategy   | Correct Retrievals |   Hit Rate |
+| ---------- | -----------------: | ---------: |
+| 700 / 150  |              7 / 9 |  **77.8%** |
+| 1000 / 200 |              9 / 9 | **100.0%** |
+
+### Result
+
+The `1000 / 200` configuration achieved a **100.0% retrieval hit rate** on the 9 answerable test questions, compared with **77.8%** for the `700 / 150` configuration.
+
+Therefore, the `1000 / 200` configuration was selected for the final RAG pipeline based on this evaluation.
+
+> **Note:** This hit-rate evaluation measures retrieval coverage only. It does not represent the accuracy of the final LLM-generated answers and should not be interpreted as a universal result for other datasets or books.
