@@ -1,3 +1,4 @@
+
 import os
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -74,9 +75,7 @@ def load_documents():
             }
         )
 
-        documents.append(
-            document
-        )
+        documents.append(document)
 
         print(
             f"Loaded: {filename}"
@@ -85,11 +84,15 @@ def load_documents():
     return documents
 
 
-def split_documents(documents):
+def split_documents(
+    documents,
+    chunk_size=1000,
+    chunk_overlap=200
+):
 
     text_splitter = RecursiveCharacterTextSplitter(
-   chunk_size=1000,
-chunk_overlap=200,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         separators=[
             "\n\n",
             "\n",
@@ -123,7 +126,9 @@ def main():
     )
 
     chunks = split_documents(
-        documents
+        documents,
+        chunk_size=1000,
+        chunk_overlap=200
     )
 
     print(
@@ -168,4 +173,4 @@ def main():
 
 if __name__ == "__main__":
 
-  main()
+    main()
