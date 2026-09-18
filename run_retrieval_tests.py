@@ -79,12 +79,9 @@ def main():
         )
 
         # Retrieve top 10 documents
-        results = (
-            retriever.vectorstore
-            .similarity_search_with_score(
-                question,
-                k=10
-            )
+        results = retriever.vectorstore.similarity_search_with_score(
+            question,
+            k=10
         )
 
         chapters = []
@@ -108,7 +105,7 @@ def main():
             )
 
             print(
-                "Result: RETRIEVAL COMPLETED"
+                "Result: RETRIEVED DOCUMENTS"
             )
 
             print(
@@ -119,8 +116,8 @@ def main():
 
         checked += 1
 
-        # Check expected chapter
-        # inside top 10 results
+        # Check whether expected chapter
+        # appears in top 10
         found = any(
             expected_chapter in chapter
             for chapter in chapters
@@ -133,8 +130,7 @@ def main():
             )
 
             print(
-                f"Expected chapter: "
-                f"{expected_chapter}"
+                f"Expected chapter: {expected_chapter}"
             )
 
             passed += 1
@@ -146,8 +142,7 @@ def main():
             )
 
             print(
-                f"Expected chapter: "
-                f"{expected_chapter}"
+                f"Expected chapter: {expected_chapter}"
             )
 
         print(
@@ -168,8 +163,7 @@ def main():
     print("=" * 70)
 
     print(
-        f"Answerable tests passed: "
-        f"{passed}/{checked}"
+        f"Answerable tests passed: {passed}/{checked}"
     )
 
     if checked > 0:
@@ -179,8 +173,7 @@ def main():
         ) * 100
 
         print(
-            f"Retrieval hit rate: "
-            f"{accuracy:.1f}%"
+            f"Retrieval hit rate: {accuracy:.1f}%"
         )
 
 

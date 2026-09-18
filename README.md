@@ -1,36 +1,45 @@
-# 📚 Knowledge Base Chatbot — বিশ্বের উপাদান
+# 📚 বিশ্বের উপাদান — Knowledge Base Chatbot
 
-A Bengali book-based RAG (Retrieval-Augmented Generation) chatbot built using LangChain, multilingual embeddings, FAISS, and Groq LLM.
+A Bengali book-based Retrieval-Augmented Generation (RAG) chatbot built using **LangChain, multilingual embeddings, FAISS, Groq, and Streamlit**.
 
-The chatbot answers questions using only the selected Bengali book **“বিশ্বের উপাদান”** by **শ্রীচারুচন্দ্র ভট্টাচার্য**.
+The chatbot answers questions using only the selected Bengali book **“বিশ্বের উপাদান”** and provides the relevant chapter and source URL with each answer.
 
 ---
 
 ## 🎯 Project Objective
 
-The goal of this project is to build a Knowledge Base Chatbot that can:
+The goal of this project is to build a **Knowledge Base Chatbot with a Vector Database** that can:
 
 * Crawl a complete Bengali book from Wikisource
 * Clean and preprocess the collected text
 * Split the book into meaningful chunks
 * Generate multilingual embeddings
 * Store embeddings in a FAISS vector database
-* Retrieve relevant book content for a user question
+* Retrieve relevant book passages
 * Generate answers using an LLM
-* Provide Chapter and Source information with the answer
+* Provide chapter and source information
+* Avoid using outside knowledge for book-specific questions
 * Clearly respond when information is not available in the selected book
 
 ---
 
 ## 📖 Knowledge Source
 
+### Selected Book
+
 **Book:** বিশ্বের উপাদান
 **Author:** শ্রীচারুচন্দ্র ভট্টাচার্য
-**Year:** 1952
+**Publication Year:** 1952
 **Publisher:** Visva-Bharati
 **Source:** Bengali Wikisource
 
-### Main Chapters
+**Source URL:**
+
+https://bn.wikisource.org/wiki/বিশ্বের_উপাদান
+
+The selected book is a completed Bengali prose book containing six main chapters.
+
+### Chapters
 
 1. অণু, পরমাণু
 2. ইলেক্‌ট্রন ও প্রোটন
@@ -41,243 +50,103 @@ The goal of this project is to build a Knowledge Base Chatbot that can:
 
 ---
 
-## 🏗️ RAG Architecture
+## 🧠 RAG Architecture
 
 ```text
-Bengali Wikisource
-        │
-        ▼
-     Crawler
-        │
-        ▼
+Bengali Wikisource Book
+        ↓
+      Crawler
+        ↓
    Raw Text Files
-        │
-        ▼
- Text Cleaning & Processing
-        │
-        ▼
+        ↓
+   Text Processor
+        ↓
+   Cleaned Documents
+        ↓
       Chunking
-        │
-        ▼
+        ↓
+   103 Text Chunks
+        ↓
 Multilingual Embeddings
-        │
-        ▼
-   FAISS Vector DB
-        │
-        ▼
-     Retriever
-        │
-        ▼
-     Groq LLM
-        │
-        ▼
-      Answer
-        │
-        ▼
- Chapter + Source
+        ↓
+     FAISS Vector DB
+        ↓
+      Retriever
+        ↓
+Relevant Book Context
+        ↓
+      Groq LLM
+        ↓
+Bengali Answer
+        ↓
+Chapter + Source Citation
 ```
 
 ---
 
-## 🔄 Project Pipeline
+## 🔍 Retrieval Configuration
 
-### 1. Web Crawling
-
-The project collects the complete book chapters from Bengali Wikisource.
-
-Crawler:
-
-```text
-src/crawler.py
-```
-
-The crawler discovers the chapter URLs and saves the raw text inside:
-
-```text
-data/book/
-```
-
----
-
-### 2. Text Processing
-
-Raw Wikisource text contains metadata and navigation elements.
-
-The processor:
-
-* Removes unnecessary navigation text
-* Normalizes whitespace
-* Extracts metadata
-* Identifies chapter titles
-* Preserves source URLs
-* Saves cleaned documents
-
-Processor:
-
-```text
-src/processor.py
-```
-
-Cleaned files are stored in:
-
-```text
-data/cleaned/
-```
-
----
-
-### 3. Chunking
-
-The cleaned documents are divided into smaller overlapping chunks.
-
-Configuration:
+The final chunking configuration is:
 
 ```text
 Chunk size: 1000 characters
 Chunk overlap: 200 characters
 ```
 
-Chunking uses LangChain's:
+The processed book produces:
 
 ```text
-RecursiveCharacterTextSplitter
+Total chunks: 103
 ```
 
-Implementation:
+The chatbot uses:
 
 ```text
-src/chunker.py
-```
-
-Each chunk preserves metadata such as:
-
-* Book
-* Chapter
-* Source URL
-* Filename
-
----
-
-### 4. Multilingual Embeddings
-
-The project uses a multilingual sentence-transformer model:
-
-```text
+Embedding Model:
 sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
-This model was selected because the knowledge base contains Bengali text.
-
-Implementation:
-
-```text
-src/embedding.py
-```
-
----
-
-### 5. FAISS Vector Database
-
-The generated embeddings are stored in a FAISS vector database.
-
-```text
-vectorstore/
-```
-
-FAISS allows the chatbot to search for semantically relevant book chunks.
-
----
-
-### 6. Retrieval
-
-The retriever loads the FAISS database and searches for relevant documents.
-
-The current retrieval configuration uses:
+The retriever uses FAISS similarity search with:
 
 ```text
 k = 10
 ```
 
-This helps retrieve relevant Bengali content even for short questions.
-
-Implementation:
-
-```text
-src/retriever.py
-```
+This configuration was selected after testing different chunk sizes.
 
 ---
 
-### 7. Question Answering
+## 📊 Retrieval Evaluation
 
-The QA system:
+The project includes **10 test questions**:
 
-1. Receives a user question
-2. Retrieves relevant book chunks
-3. Builds a context
-4. Sends the context and question to the LLM
-5. Generates a Bengali answer
-6. Includes Chapter and Source information
+* 9 answerable questions
+* 1 no-answer question
 
-Implementation:
+For the 9 answerable questions, the expected chapter was found within the top-10 retrieved results.
+
+### Result
 
 ```text
-src/qa.py
+Answerable tests passed: 9/9
+Retrieval hit rate: 100%
 ```
 
-The LLM used in this project is:
+> Note: This 100% result represents **retrieval coverage at top-10**, not 100% end-to-end answer accuracy.
 
-```text
-openai/gpt-oss-20b
-```
-
-through the Groq API.
+The no-answer test is separately used to evaluate whether the chatbot can avoid answering questions outside the selected book.
 
 ---
 
-## 💬 Chatbot Interface
-
-The project includes a Streamlit interface.
-
-Main application:
-
-```text
-app.py
-```
-
-The UI provides:
-
-* Bengali chatbot interface
-* Chat history
-* Question input
-* Loading indicator
-* Book information
-* Clear chat option
-* Chapter and Source information in responses
-
-Run the application with:
-
-```bash
-streamlit run app.py
-```
-
-Then open:
-
-```text
-http://localhost:8501
-```
-
----
-
-## 📁 Project Structure
+## 🗂️ Project Structure
 
 ```text
 module-24-knowledge-base-chatbot/
 │
 ├── app.py
 ├── README.md
-├── Requirements.txt
-├── .env
+├── requirements.txt
+├── .gitignore
 │
 ├── data/
 │   ├── book/
@@ -308,10 +177,11 @@ module-24-knowledge-base-chatbot/
 │   ├── test_questions.json
 │   └── run_tests.py
 │
-├── vectorstore/
-│
-└── venv/
+└── vectorstore/
+    └── FAISS index files
 ```
+
+> `venv/` and `.env` are intentionally excluded from Git because they are listed in `.gitignore`.
 
 ---
 
@@ -320,11 +190,11 @@ module-24-knowledge-base-chatbot/
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/rabiul9137/module-24-knowledge-base-chatbot.git
 cd module-24-knowledge-base-chatbot
 ```
 
-### 2. Create virtual environment
+### 2. Create a virtual environment
 
 Windows:
 
@@ -332,7 +202,7 @@ Windows:
 python -m venv venv
 ```
 
-Activate:
+Activate the environment:
 
 ```bash
 venv\Scripts\activate
@@ -341,7 +211,7 @@ venv\Scripts\activate
 ### 3. Install dependencies
 
 ```bash
-pip install -r Requirements.txt
+pip install -r requirements.txt
 ```
 
 ---
@@ -356,25 +226,31 @@ GROQ_API_KEY=your_groq_api_key_here
 
 Never commit the real API key to GitHub.
 
-Add `.env` to `.gitignore`.
+The project `.gitignore` contains:
+
+```text
+.env
+```
+
+so the API key remains local.
 
 ---
 
-## ▶️ Run the Chatbot
+## 🚀 Run the Chatbot
 
-Make sure the virtual environment is activated:
+Activate the virtual environment:
 
 ```bash
 venv\Scripts\activate
 ```
 
-Then run:
+Run the Streamlit application:
 
 ```bash
 streamlit run app.py
 ```
 
-Open:
+Open the application in your browser:
 
 ```text
 http://localhost:8501
@@ -384,69 +260,29 @@ http://localhost:8501
 
 ## 🧪 Test Questions
 
-The project contains 10 test questions covering the book's major topics.
+The project contains 10 test questions.
 
-Examples:
+### 1. পরমাণু কী?
 
-### Question 1
+### 2. ইলেক্ট্রন কী?
 
-```text
-পরমাণু কী?
-```
+### 3. প্রোটন কী?
 
-### Question 2
+### 4. নিউট্রন কী?
 
-```text
-ইলেক্ট্রন কী?
-```
+### 5. পজিট্রন কী?
 
-### Question 3
+### 6. মিসোট্রন বা মেসন সম্পর্কে বইটিতে কী বলা হয়েছে?
 
-```text
-প্রোটন কী?
-```
+### 7. মৌলিক পদার্থের পরমাণুগুলোর মধ্যে কী পার্থক্য আছে?
 
-### Question 4
+### 8. শক্তি ও তড়িৎ সম্পর্কে বইটিতে কী আলোচনা করা হয়েছে?
 
-```text
-নিউট্রন কী?
-```
+### 9. প্রাউটের মত কী ছিল?
 
-### Question 5
+### 10. বাংলাদেশের বর্তমান জনসংখ্যা কত?
 
-```text
-পজিট্রন কী?
-```
-
-### Question 6
-
-```text
-মিসোট্রন বা মেসন সম্পর্কে বইটিতে কী বলা হয়েছে?
-```
-
-### Question 7
-
-```text
-মৌলিক পদার্থের পরমাণুগুলোর মধ্যে কী পার্থক্য আছে?
-```
-
-### Question 8
-
-```text
-শক্তি ও তড়িৎ সম্পর্কে বইটিতে কী আলোচনা করা হয়েছে?
-```
-
-### Question 9
-
-```text
-প্রাউটের মত কী ছিল?
-```
-
-### Question 10 — No Answer Test
-
-```text
-বাংলাদেশের বর্তমান জনসংখ্যা কত?
-```
+Question 10 is intentionally outside the selected book and is used as a **no-answer test**.
 
 Expected behavior:
 
@@ -458,55 +294,50 @@ Expected behavior:
 
 ## 🛡️ Hallucination Control
 
-The chatbot is instructed to answer only from the retrieved book context.
+The chatbot is instructed to answer book-specific questions only from the retrieved book context.
 
-If the required information is not available in the selected book, the chatbot should respond:
+The prompt enforces the following rules:
+
+1. Use only the retrieved book context.
+2. Do not use outside knowledge.
+3. Use relevant information even if the wording differs from the question.
+4. Answer in Bengali.
+5. Include the relevant chapter and source.
+6. If the information is not available in the selected book, clearly say:
 
 ```text
 এই তথ্যটি নির্বাচিত বইটিতে পাওয়া যায়নি।
 ```
 
-The chatbot should not use outside knowledge to answer book-specific questions.
+This prevents the chatbot from behaving like a general-purpose knowledge engine.
 
 ---
 
-## 🧰 Technologies Used
+## 🌐 Multilingual Embeddings
 
-| Technology            | Purpose                   |
-| --------------------- | ------------------------- |
-| Python                | Core programming language |
-| LangChain             | RAG pipeline              |
-| BeautifulSoup         | Web scraping              |
-| Requests              | HTTP requests             |
-| Sentence Transformers | Multilingual embeddings   |
-| FAISS                 | Vector database           |
-| Groq                  | LLM inference             |
-| Streamlit             | Web interface             |
-| python-dotenv         | Environment variables     |
-
----
-
-## 📌 Important Design Decisions
-
-### Why a multilingual embedding model?
-
-The source material is Bengali. Therefore, an English-only embedding model would not be suitable for this knowledge base.
+The source material is Bengali, so an English-only embedding model would not be appropriate for semantic retrieval.
 
 The project uses:
 
 ```text
-paraphrase-multilingual-MiniLM-L12-v2
+sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
-to support Bengali semantic search.
+This model supports multilingual semantic representations and works with the Bengali book content.
 
-### Why FAISS?
+---
 
-FAISS provides efficient similarity search over vector embeddings and is simple to use for a local knowledge-base project.
+## 🗄️ Why FAISS?
 
-### Why metadata?
+FAISS is used as the vector database because it provides efficient similarity search over embedding vectors and is convenient for a local RAG application.
 
-Each chunk stores:
+The vector store is generated from the processed book chunks.
+
+---
+
+## 🏷️ Metadata Preservation
+
+Each document chunk preserves important metadata such as:
 
 ```text
 Book
@@ -515,22 +346,113 @@ Source URL
 Filename
 ```
 
-This allows the chatbot to identify where an answer came from.
+This allows the chatbot to identify where retrieved information came from and provide source references with answers.
 
 ---
 
-## 🚀 Future Improvements
+## 🧩 Main Components
 
-Possible future improvements include:
+### `crawler.py`
 
-* Better Bengali-specific embeddings
+Downloads the selected book chapters from Bengali Wikisource.
+
+### `processor.py`
+
+Cleans raw scraped text and preserves important metadata.
+
+### `chunker.py`
+
+Splits cleaned documents into overlapping text chunks.
+
+Final configuration:
+
+```text
+chunk_size = 1000
+chunk_overlap = 200
+```
+
+### `embedding.py`
+
+Generates multilingual embeddings and creates the FAISS vector database.
+
+### `retriever.py`
+
+Loads the FAISS database and retrieves the most relevant book chunks.
+
+### `qa.py`
+
+Combines retrieval with the Groq LLM and generates Bengali answers based only on retrieved context.
+
+### `app.py`
+
+Provides the Streamlit chatbot interface.
+
+---
+
+## 🧰 Technologies Used
+
+| Technology               | Purpose                           |
+| ------------------------ | --------------------------------- |
+| Python                   | Core programming language         |
+| LangChain                | RAG pipeline                      |
+| LangChain Community      | FAISS and supporting integrations |
+| LangChain HuggingFace    | Embedding integration             |
+| LangChain Text Splitters | Document chunking                 |
+| BeautifulSoup            | Web scraping                      |
+| Requests                 | HTTP requests                     |
+| Sentence Transformers    | Multilingual embeddings           |
+| FAISS                    | Vector similarity search          |
+| Groq                     | LLM inference                     |
+| Streamlit                | Web interface                     |
+| python-dotenv            | Environment variable management   |
+
+---
+
+## 📌 Important Design Decisions
+
+### Multilingual embedding model
+
+The source material is Bengali, so multilingual embeddings were selected instead of an English-only embedding model.
+
+### Chunk size
+
+Different chunking configurations were tested.
+
+The final configuration:
+
+```text
+1000 characters
+200 character overlap
+```
+
+produced 103 chunks and achieved 9/9 expected-chapter retrieval coverage in the current test set.
+
+### Top-k retrieval
+
+The retriever uses:
+
+```text
+k = 10
+```
+
+This was chosen because some questions, such as `প্রোটন কী?`, did not consistently retrieve the expected chapter within a smaller top-k value but were found when using top-10 retrieval.
+
+---
+
+## 🔮 Future Improvements
+
+Possible improvements include:
+
+* Bengali-specific embedding models
 * Hybrid keyword + semantic retrieval
 * Reranking retrieved documents
+* Better no-answer detection
 * Streaming LLM responses
 * Improved source citation UI
 * Chunking strategy comparison
 * Embedding model comparison
-* Evaluation using retrieval hit-rate
+* Automated retrieval evaluation
+* End-to-end answer evaluation
 * Deployment using Streamlit Cloud or another hosting platform
 
 ---
@@ -543,9 +465,11 @@ AI/ML Developer | Computer Vision | Generative AI | AI Agents
 
 GitHub:
 
-```text
 https://github.com/rabiul9137
-```
+
+Project Repository:
+
+https://github.com/rabiul9137/module-24-knowledge-base-chatbot
 
 ---
 
@@ -553,4 +477,4 @@ https://github.com/rabiul9137
 
 This project is an educational RAG application built around the selected Bengali book **“বিশ্বের উপাদান”**.
 
-The chatbot is designed to answer based on the selected knowledge source and should not be treated as a general-purpose factual search engine.
+The chatbot is designed to answer questions using the selected knowledge source and should not be treated as a general-purpose factual search engine.
